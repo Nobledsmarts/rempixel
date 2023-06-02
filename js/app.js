@@ -1,9 +1,8 @@
 let form = document.querySelector("form");
 
 const val = (unit) => {
-    if (!/^(.+)\.$/.test(unit)) {
-        let v = Function(`return ${unit}`)();
-        return v ? v : 0;
+    if (!(/^(.+)\.$/.test(unit))) {
+        return Function(`return ${unit}`)();
     } else {
         return unit;
     }
@@ -18,28 +17,39 @@ const rempixel = {
             form.elements.namedItem("rem").value = isValidExpression(pixels) ? val(pixels) / base_font : rem;
         }
     },
-    pixels() {
-        let pixels = form.elements.namedItem("pixels").value;
-        let { base_font, rem } = getValues();
+    pixels(e) {
+        delay(_ => {
+            let pixels = form.elements.namedItem("pixels").value;
+            let { base_font, rem } = getValues();
 
-        if (pixels) {
-            form.elements.namedItem("rem").value = isValidExpression(pixels) ? val(pixels) / base_font : rem;
-            form.elements.namedItem("pixels").value = isValidExpression(pixels) ? val(pixels) : pixels;
-        }
+            if (pixels) {
+                form.elements.namedItem("rem").value = isValidExpression(pixels) ? val(pixels) / base_font : rem;
+                form.elements.namedItem("pixels").value = isValidExpression(pixels) ? val(pixels) : pixels;
+            }
+        });
     },
-    rem() {
-        let rem = form.elements.namedItem("rem").value;
-        let { base_font, pixels } = getValues();
+    rem(e) {
+        delay(_ => {
+            let rem = form.elements.namedItem("rem").value;
+            let { base_font, pixels } = getValues();
 
-        if (rem) {
-            form.elements.namedItem("pixels").value = isValidExpression(rem) ? val(rem) * base_font : pixels;
-            form.elements.namedItem("rem").value = isValidExpression(rem) ? val(rem) : rem;
-        }
+            if (rem) {
+                form.elements.namedItem("pixels").value = isValidExpression(rem) ? val(rem) * base_font : pixels;
+                form.elements.namedItem("rem").value = isValidExpression(rem) ? val(rem) : rem;
+            }
+        })
     },
 };
 
+function delay(fn, by = 100){
+    let timeout = setTimeout(() => {
+        fn();
+        clearTimeout(timeout);
+    }, by)
+}
+
 for (let el of Object.keys(rempixel)) {
-    form.elements.namedItem(el).addEventListener("input", rempixel[el]);
+    form.elements.namedItem(el).addEventListener("input", (e) => [e.preventDefault(), e.isTrusted && rempixel[el](e)]);
 }
 
 form.elements.namedItem("base_font").addEventListener("blur", (e) => {
@@ -49,9 +59,9 @@ form.elements.namedItem("base_font").addEventListener("blur", (e) => {
 
 function getValues() {
     return {
-        base_font: +form.elements.namedItem("base_font").value,
-        pixels: +form.elements.namedItem("pixels").value,
-        rem: +form.elements.namedItem("rem").value,
+        base_font: +(form.elements.namedItem("base_font").value),
+        pixels: +(form.elements.namedItem("pixels").value),
+        rem: +(form.elements.namedItem("rem").value),
     };
 }
 function isValidExpression(unit) {
