@@ -1,6 +1,6 @@
 let form = document.querySelector("form");
 
-const val = (unit) => {
+const evaluate = (unit) => {
     if (!(/^(.+)\.$/.test(unit))) {
         return Function(`return ${unit}`)();
     } else {
@@ -8,69 +8,73 @@ const val = (unit) => {
     }
 };
 const rempixel = {
-    base_font(e) {
-        let isBlur = typeof e == "boolean";
-        if (isBlur) {
-            let base_font = form.elements.namedItem("base_font").value;
-            let { rem, pixels } = getValues();
-            form.elements.namedItem("pixels").value = isValidExpression(rem) ? val(rem) * base_font : pixels;
-            form.elements.namedItem("rem").value = isValidExpression(pixels) ? val(pixels) / base_font : rem;
+    base_font : {
+        target : 'base_font',
+        fn(e) {
+            let { base_font, pixels, rem } = getElements();
+            pixels.value = isValidExpression(rem.value) ? evaluate(rem.value) * base_font.value : pixels.value;
+            rem.value = isValidExpression(pixels.value) ? evaluate(pixels.value) / base_font.value : rem.value;
         }
     },
-    pixels(e) {
-        delay(_ => {
-            let pixels = form.elements.namedItem("pixels").value;
-            let { base_font, rem } = getValues();
+    pixels : {
+        target : 'pixels',
+        fn() {
+            return delay(_ => {
+                let { base_font, pixels, rem } = getElements();
 
-            if (pixels) {
-                form.elements.namedItem("rem").value = isValidExpression(pixels) ? val(pixels) / base_font : rem;
-                form.elements.namedItem("pixels").value = isValidExpression(pixels) ? val(pixels) : pixels;
-            }
-        });
+                if (pixels.value) {
+                    rem.value = isValidExpression(pixels.value) ? evaluate(pixels.value) / base_font.value : rem.value;
+                    pixels.value = isValidExpression(pixels.value) ? evaluate(pixels.value) : pixels.value;
+                }
+            });
+        }
     },
-    rem(e) {
-        delay(_ => {
-            let rem = form.elements.namedItem("rem").value;
-            let { base_font, pixels } = getValues();
+    rem : {
+        target : 'rem',
+        fn(){
+            return delay(_ => {
+                let { base_font, pixels, rem } = getElements();
 
-            if (rem) {
-                form.elements.namedItem("pixels").value = isValidExpression(rem) ? val(rem) * base_font : pixels;
-                form.elements.namedItem("rem").value = isValidExpression(rem) ? val(rem) : rem;
-            }
-        })
+                if (rem.value) {
+                    pixels.value = isValidExpression(rem.value) ? evaluate(rem.value) * base_font.value : pixels.value;
+                    rem.value = isValidExpression(rem.value) ? evaluate(rem.value) : rem.value;
+                }
+            })
+        }
     },
 };
 
 function delay(fn, by = 100){
-    let timeout = setTimeout(() => {
+    let timeout = setTimeout(_ => {
         fn();
         clearTimeout(timeout);
     }, by)
 }
 
-for (let el of Object.keys(rempixel)) {
-    form.elements.namedItem(el).addEventListener("input", (e) => [e.preventDefault(), e.isTrusted && rempixel[el](e)]);
+for (let el of Object.values(rempixel)) {
+    el.target != 'base_font' && getElements()[el.target].addEventListener("input", (e) => [e.preventDefault(), e.isTrusted && el.fn(e)]);
 }
 
-form.elements.namedItem("base_font").addEventListener("blur", (e) => {
-    e.currentTarget.value = val(e.currentTarget.value);
-    rempixel.base_font(true);
+getElements().base_font.addEventListener("change", (e) => {
+    e.currentTarget.value = evaluate(e.currentTarget.value);
+    rempixel.base_font.fn(true);
 });
 
-function getValues() {
-    return {
-        base_font: +(form.elements.namedItem("base_font").value),
-        pixels: +(form.elements.namedItem("pixels").value),
-        rem: +(form.elements.namedItem("rem").value),
-    };
+function getElements(element){
+    let elements = Object.values(rempixel).reduce((o, key) => ({ 
+        ...o,
+        [key.target] : form.elements.namedItem(key.target) })
+    , {});
+
+    return element ? elements[element] : elements;
 }
-function isValidExpression(unit) {
-    let valid;
+function isValidExpression(input) {
+    let isValid;
     try {
-        let v = val(unit);
-        valid = isNaN(v) ? false : true;
+        let output = evaluate(input);
+        isValid = isNaN(output) ? false : true;
     } catch (e) {
-        valid = false;
+        isValid = false;
     }
-    return valid;
+    return isValid;
 }
