@@ -44,7 +44,7 @@ const rempixel = {
     },
 };
 
-function delay(fn, by = 100) {
+function delay(fn, by = 50) {
     let timeout = setTimeout(_ => {
         fn();
         clearTimeout(timeout);
