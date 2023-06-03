@@ -19,7 +19,7 @@ const rempixel = {
     pixels: {
         target: "pixels",
         fn() {
-            return delay((_) => {
+            return delay(_ => {
                 let { base_font, pixels, rem } = getElements();
 
                 if (pixels.value) {
@@ -32,7 +32,7 @@ const rempixel = {
     rem: {
         target: "rem",
         fn() {
-            return delay((_) => {
+            return delay(_ => {
                 let { base_font, pixels, rem } = getElements();
 
                 if (rem.value) {
@@ -45,7 +45,7 @@ const rempixel = {
 };
 
 function delay(fn, by = 100) {
-    let timeout = setTimeout((_) => {
+    let timeout = setTimeout(_ => {
         fn();
         clearTimeout(timeout);
     }, by);
@@ -68,7 +68,6 @@ function getElements(element) {
         }),
         {}
     );
-
     return element ? elements[element] : elements;
 }
 function isValidExpression(input) {
