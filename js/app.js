@@ -52,10 +52,10 @@ function delay(fn, by = 100){
 }
 
 for (let el of Object.values(rempixel)) {
-    el.target != 'base_font' && getElements()[el.target].addEventListener("input", (e) => [e.preventDefault(), e.isTrusted && el.fn(e)]);
+    el.target != 'base_font' && getElements(el.target).addEventListener("input", (e) => [e.preventDefault(), e.isTrusted && el.fn(e)]);
 }
 
-getElements().base_font.addEventListener("change", (e) => {
+getElements('base_font').addEventListener("change", (e) => {
     e.currentTarget.value = evaluate(e.currentTarget.value);
     rempixel.base_font.fn(true);
 });
